@@ -59,7 +59,18 @@
 let socket;
 
 function connect() {
-    socket = new WebSocket("ws://192.168.2.224:3000");
+    const params = new URLSearchParams(window.location.search);
+    const override = params.get('ws');
+    const defaultUrl = "ws://192.168.2.224:3000";
+    const wsUrl = override ? override : defaultUrl;
+
+    if (location.protocol === 'https:' && wsUrl.startsWith('ws://')) {
+        console.error('Seite per HTTPS geladen — unsichere ws:// Verbindung blockiert. Verwende einen wss://-Tunnel (z.B. ngrok) und rufe die Seite mit ?ws=wss://your-tunnel-url auf.');
+        return;
+    }
+
+    console.log('Verbinde zu', wsUrl);
+    socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
         console.log("Verbunden");
