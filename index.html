@@ -46,7 +46,7 @@
 
 <div class="container">
 
-    <button onclick="playSound('au au')">Airhorn</button>
+    <button onclick="playSound('au au')">au au</button>
     <button onclick="playSound('chicken-on-tree-screaming')">Chicken Scream</button>
     <button onclick="playSound('cringe-daubner')">Cringe Daubner</button>
     <button onclick="playSound('das-gibt-ne-anzeige-wegen-beleidigung')">Anzeige wegen Beleidigung</button>
@@ -59,7 +59,7 @@
 let socket;
 
 function connect() {
-    socket = new WebSocket("http://192.168.2.224:3000");
+    socket = new WebSocket("ws://192.168.2.224:3000");
 
     socket.onopen = () => {
         console.log("Verbunden");
