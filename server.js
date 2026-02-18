@@ -1,14 +1,45 @@
 const WebSocket = require("ws");
 const player = require("play-sound")();
 const path = require("path");
-const { execSync } = require("child_process");
+const { execSync, spawn } = require("child_process");
+const fs = require("fs");
+const os = require("os");
 
-let ffplayAvailable = false;
+let ffplayPath = null;
+// 1) try system PATH
 try {
-  execSync("where ffplay", { stdio: "ignore" });
-  ffplayAvailable = true;
+  const out = execSync("where ffplay", { encoding: "utf8" }).trim();
+  if (out) ffplayPath = out.split(/\r?\n/)[0];
 } catch (e) {
-  // ffplay nicht gefunden
+  // not in PATH
+}
+
+// 2) try common user install folder (from our installer script)
+if (!ffplayPath) {
+  const home = os.homedir();
+  const possibleRoot = path.join(home, "ffmpeg");
+
+  function findFfplay(dir) {
+    try {
+      const items = fs.readdirSync(dir, { withFileTypes: true });
+      for (const it of items) {
+        const p = path.join(dir, it.name);
+        if (it.isFile() && it.name.toLowerCase() === "ffplay.exe") return p;
+        if (it.isDirectory()) {
+          const found = findFfplay(p);
+          if (found) return found;
+        }
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
+  }
+
+  if (fs.existsSync(possibleRoot)) {
+    const found = findFfplay(possibleRoot);
+    if (found) ffplayPath = found;
+  }
 }
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -47,10 +78,9 @@ wss.on("connection", (ws) => {
       const file = path.join(__dirname, "sounds", name + ".mp3");
       console.log("Spiele:", file);
 
-      if (ffplayAvailable) {
-        player.play(file, { player: "ffplay", ffplay: ["-nodisp", "-autoexit"] }, (err) => {
-          if (err) console.error("Fehler (ffplay):", err);
-        });
+      if (ffplayPath) {
+        const p = spawn(ffplayPath, ["-nodisp", "-autoexit", file], { stdio: 'ignore' });
+        p.on('error', (err) => console.error('Fehler (ffplay spawn):', err));
       } else {
         player.play(file, (err) => {
           if (err) console.error("Fehler:", err);
