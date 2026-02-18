@@ -1,6 +1,15 @@
 const WebSocket = require("ws");
 const player = require("play-sound")();
 const path = require("path");
+const { execSync } = require("child_process");
+
+let ffplayAvailable = false;
+try {
+  execSync("where ffplay", { stdio: "ignore" });
+  ffplayAvailable = true;
+} catch (e) {
+  // ffplay nicht gefunden
+}
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const wss = new WebSocket.Server({ port });
@@ -38,9 +47,15 @@ wss.on("connection", (ws) => {
       const file = path.join(__dirname, "sounds", name + ".mp3");
       console.log("Spiele:", file);
 
-      player.play(file, (err) => {
-        if (err) console.error("Fehler:", err);
-      });
+      if (ffplayAvailable) {
+        player.play(file, { player: "ffplay", ffplay: ["-nodisp", "-autoexit"] }, (err) => {
+          if (err) console.error("Fehler (ffplay):", err);
+        });
+      } else {
+        player.play(file, (err) => {
+          if (err) console.error("Fehler:", err);
+        });
+      }
     } catch (e) {
       console.error("Ungültige Nachricht:", e.message);
     }
