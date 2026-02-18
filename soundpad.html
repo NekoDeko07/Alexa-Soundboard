@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Echo Soundpad</title>
+
+<style>
+    body {
+        margin: 0;
+        background: #111;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        width: 90vw;
+        height: 90vh;
+    }
+
+    .pad {
+        background: linear-gradient(145deg, #222, #1a1a1a);
+        border-radius: 20px;
+        font-size: 28px;
+        color: white;
+        border: none;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        transition: transform 0.08s ease, background 0.2s ease;
+    }
+
+    .pad:active {
+        transform: scale(0.95);
+        background: #333;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <button onclick="playSound('au au.mp3')">Airhorn</button>
+    <button onclick="playSound('chicken-on-tree-screaming.mp3')">Chicken Scream</button>
+    <button onclick="playSound('cringe-daubner.mp3')">Cringe Daubner</button>
+    <button onclick="playSound('das-gibt-ne-anzeige-wegen-beleidigung.mp3')">Anzeige wegen Beleidigung</button>
+    <button onclick="playSound('franzosen-grrrrr_9R4znxK.mp3')">Franzosen Grrrrr</button>
+    <button onclick="playSound('geiler-wecker.mp3')">Geiler Wecker</button>
+
+</div>
+
+<script>
+let socket;
+
+function connect() {
+    socket = new WebSocket("ws://DEINE-PC-IP:3000");
+
+    socket.onopen = () => {
+        console.log("Verbunden");
+    };
+
+    socket.onclose = () => {
+        console.log("Verbindung verloren – reconnect...");
+        setTimeout(connect, 2000);
+    };
+}
+
+function playSound(name) {
+    if (socket && socket.readyState === 1) {
+        socket.send(JSON.stringify({ sound: name }));
+    }
+}
+
+connect();
+</script>
+
+</body>
+</html>
