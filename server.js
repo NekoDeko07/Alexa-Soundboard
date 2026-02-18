@@ -2,8 +2,21 @@ const WebSocket = require("ws");
 const player = require("play-sound")();
 const path = require("path");
 
-const wss = new WebSocket.Server({ port: 3000 });
-console.log("WebSocket Server läuft auf Port 3000");
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const wss = new WebSocket.Server({ port });
+
+wss.on("listening", () => {
+  console.log(`WebSocket Server läuft auf Port ${port}`);
+});
+
+wss.on("error", (err) => {
+  if (err && err.code === "EADDRINUSE") {
+    console.error(`Fehler: Port ${port} bereits in Verwendung. Bitte Port freigeben oder andere PORT-Umgebungsvariable setzen.`);
+    process.exit(1);
+  } else {
+    console.error("WebSocket-Fehler:", err);
+  }
+});
 
 wss.on("connection", (ws) => {
   console.log("Alexa verbunden");
